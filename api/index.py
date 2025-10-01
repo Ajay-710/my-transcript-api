@@ -11,18 +11,10 @@ def get_transcript_route():
         return jsonify({"error": "videoId parameter is required"}), 400
 
     try:
-        # This is a more robust way to get a transcript.
-        # It first lists available transcripts for the video.
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-
-        # Try to find the English transcript specifically.
-        transcript = transcript_list.find_transcript(['en'])
+        # This is the correct way to call the function with the modern library version
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
         
-        # Fetch the actual transcript data.
-        transcript_data = transcript.fetch()
-
-        # Combine the text into a single string.
-        full_transcript = " ".join([item['text'] for item in transcript_data])
+        full_transcript = " ".join([item['text'] for item in transcript_list])
         
         return jsonify({"success": True, "transcript": full_transcript})
 
