@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-# The main change is importing 'get_transcript' directly here
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled, get_transcript
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
 app = Flask(__name__)
 
@@ -12,9 +11,19 @@ def get_transcript_route():
         return jsonify({"error": "videoId parameter is required"}), 400
 
     try:
-        # And the second change is calling it directly like this
-        transcript_list = get_transcript(video_id)
-        full_transcript = " ".join([item['text'] for item in transcript_list])
+        # This is a more robust way to get a transcript.
+        # It first lists available transcripts for the video.
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        # Try to find the English transcript specifically.
+        transcript = transcript_list.find_transcript(['en'])
+        
+        # Fetch the actual transcript data.
+        transcript_data = transcript.fetch()
+
+        # Combine the text into a single string.
+        full_transcript = " ".join([item['text'] for item in transcript_data])
+        
         return jsonify({"success": True, "transcript": full_transcript})
 
     except NoTranscriptFound:
