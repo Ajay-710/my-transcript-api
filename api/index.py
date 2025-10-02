@@ -5,22 +5,25 @@ app = Flask(__name__)
 
 @app.route('/transcript', methods=['GET'])
 def get_transcript_route():
+    # Get the video ID from the URL parameter (e.g., ?videoId=...)
     video_id = request.args.get('videoId')
 
+    # If no videoId is provided, return an error
     if not video_id:
-        return jsonify({"error": "videoId parameter is required"}), 400
+        return jsonify({"success": False, "error": "videoId parameter is required"}), 400
 
     try:
-        # This is the simplest and most direct way to get a transcript.
-        # The library will automatically find an available English transcript.
+        # This is the standard, most reliable way to call the library.
+        # We explicitly ask for an English transcript.
         transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
         
+        # Join all the text parts into a single string
         full_transcript = " ".join([item['text'] for item in transcript_list])
         
+        # Return the successful response
         return jsonify({"success": True, "transcript": full_transcript})
 
     except NoTranscriptFound:
-        # This error is now more specific if no English transcript is found.
         return jsonify({"success": False, "error": "No English transcript was found for this video."}), 404
     except TranscriptsDisabled:
         return jsonify({"success": False, "error": "Transcripts are disabled for this video."}), 403
